@@ -1,0 +1,17 @@
+#cloud-config
+package_update: true
+package_upgrade: false
+packages:
+  - nginx
+write_files:
+  - path: /var/www/html/index.html
+    permissions: '0644'
+    content: |
+      <!doctype html>
+      <html lang="ja">
+      <head><meta charset="utf-8"><title>Azure Portfolio</title></head>
+      <body><h1>Azure Portfolio Server</h1><p>Provisioned safely with Bicep and cloud-init.</p></body>
+      </html>
+runcmd:
+  - [systemctl, enable, --now, nginx]
+final_message: "Azure portfolio cloud-init completed"
