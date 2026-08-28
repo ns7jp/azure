@@ -1,0 +1,26 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Bicep
+        uses: azure/cli@v2
+        with:
+          inlineScript: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - name: Check Markdown links are local or HTTPS
+        shell: pwsh
+        run: |
+          $bad = Get-ChildItem -Recurse -Filter *.md | Select-String -Pattern '\]\(http://'
+          if ($bad) { $bad; throw 'Use HTTPS links in Markdown.' }
+      - name: Check whitespace
+        run: git diff --check
