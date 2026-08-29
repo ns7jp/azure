@@ -94,9 +94,11 @@ Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.biceppara
 
 ```text
 .
-├─ docs/                 設計・試験・運用・面接用ドキュメント
+├─ docs/                 設計・試験・運用・面接用ドキュメント(基礎編)
+│  └─ advanced/          発展編:より複雑な多層システム案件の設計書
 ├─ evidence/             証跡テンプレート（秘密情報を保存しない）
-├─ infra/                Bicep とパラメーター例
+├─ infra/                Bicep とパラメーター例(基礎編)
+│  └─ advanced/          発展編:多層システム案件のBicep(参考実装)
 ├─ scripts/              What-If、デプロイ、確認、削除
 └─ .github/workflows/    静的検証CI
 ```
@@ -114,6 +116,19 @@ Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.biceppara
 このリポジトリは、初心者が一連の工程を説明するための**良い最小構成**ですが、ファイルがそろっているだけではポートフォリオの完成ではありません。特に、Azure実機で取得した証跡、要件から試験までの追跡、通知を含む監視、復元試験は利用者が補う必要があります。
 
 「何が未完成で、どこまで実施すれば次のレベルか」は[不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md)にまとめています。まず必須課題だけを終え、発展機能を一度に追加しないことを推奨します。
+
+## 発展編:より複雑な案件で学ぶ(docs/advanced)
+
+基礎編(Sample Works社・単一VM)の一連の流れと[不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md)のチェックを一通り終えた人向けに、**より実務に近い規模の案件**を題材にした発展編を [`docs/advanced/`](docs/advanced/) に用意しています。
+
+| 項目 | 基礎編(本編) | 発展編(docs/advanced) |
+|---|---|---|
+| 想定クライアント | Sample Works(従業員50名) | 株式会社サンライズ物産(架空・従業員約182名) |
+| 構成 | Linux単一VM + Nginx | Windows Server 3層(Web/AP/DB)+ AD DS/DNS + ファイルサーバー、5サブネット |
+| 重点 | What-Ifによる安全な構築・証跡・CIでの静的検証 | 要件定義〜設計〜構築手順〜テスト〜用語集までの設計書としての厚み |
+| IaC | `infra/main.bicep`(`scripts/deploy.ps1`等と連携、What-If前提) | `infra/advanced/main.bicep`(学習用の参考実装。`az bicep build`等は利用者側で検証) |
+
+発展編は基礎編の`scripts/deploy.ps1`等には未対応の**設計書+参考実装**であり、基礎編と同じ「What-Ifを先に見る」「秘密情報をコミットしない」という安全原則を踏まえたうえで、自己責任で読み進めてください。詳細は [`docs/advanced/00-overview-requirements.md`](docs/advanced/00-overview-requirements.md) から、IaCの補足は [`infra/advanced/README.md`](infra/advanced/README.md) を参照してください。
 
 ## 参考にした公式設計指針
 
