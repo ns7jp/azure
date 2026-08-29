@@ -6,7 +6,7 @@
 - 構築順序は「リソースグループ→VNet→サブネット→NSG→NSGとサブネットの関連付け→Azure Bastion」という、Azureのリソース依存関係(先に作らないと後の手順が実行できない関係)に基づいた順番になっています。
 - 各手順の直後に「確認方法」を明記し、次の手順に進む前に必ず自分の手で結果を確認する習慣を身につけられるようにしています。
 - 初心者がつまずきやすいポイント(既定のアドレス空間の消し忘れ、NSGのプロトコル欄の制約など)を、実際につまずく箇所の直後に配置して解説します。
-- ポータル操作と対になる、Bicep(`iac/bicep`配下)によるコマンドラインでの代替構築方法にも触れ、画面操作とコードがどう対応するかを示します。
+- ポータル操作と対になる、Bicep(`infra/advanced`配下)によるコマンドラインでの代替構築方法にも触れ、画面操作とコードがどう対応するかを示します。
 
 ---
 
@@ -508,24 +508,24 @@ VNetの「設定 > サブネット」一覧画面に戻り、「ネットワー�
 
 ここまでのAzureポータルでの操作は、画面を見ながら値を確認できるため初学者には理解しやすい反面、手作業ゆえに入力ミス(タイプミス、優先度の付け忘れ等)が起こりやすく、また同じ環境をもう一度作り直す(検証用に複製する、誤って削除してしまった際に復旧する等)際に、毎回同じ手順をすべて再現するのは非効率です。
 
-Bicep(Azureのインフラをコードで定義するためのマイクロソフト製言語。※詳しくは用語集(11-glossary.md)を参照)を使うと、本章で行った操作と同じ内容を**コードファイルとして記述し、コマンド一発で再現**できます。01章で述べた「将来のIaC(Infrastructure as Code)化を見据えた一貫性」という設計方針のとおり、本パックでは本章のポータル操作と対になる形で、`iac/bicep`配下にBicepテンプレート一式を用意する方針としています。両者は最終的にまったく同じAzureリソース(同じ名前・同じCIDR・同じルール)を作成するものであり、学習段階ではまずポータル操作で「何が作られるのか」を体で理解し、実務ではBicep側を正として再現性のある構築・変更管理を行う、という使い分けを想定しています。
+Bicep(Azureのインフラをコードで定義するためのマイクロソフト製言語。※詳しくは用語集(11-glossary.md)を参照)を使うと、本章で行った操作と同じ内容を**コードファイルとして記述し、コマンド一発で再現**できます。01章で述べた「将来のIaC(Infrastructure as Code)化を見据えた一貫性」という設計方針のとおり、本パックでは本章のポータル操作と対になる形で、`infra/advanced`配下にBicepテンプレート一式を用意しています。両者は最終的にまったく同じAzureリソース(同じ名前・同じCIDR・同じルール)を作成するものであり、学習段階ではまずポータル操作で「何が作られるのか」を体で理解し、実務ではBicep側を正として再現性のある構築・変更管理を行う、という使い分けを想定しています。
 
-### 10.2 想定するディレクトリ構成
+### 10.2 実際のディレクトリ構成
 
-| ファイル(想定) | 対応する本章の手順 | 主なパラメータ |
+| ファイル | 対応する本章の手順 | 主なパラメータ |
 |---|---|---|
-| `iac/bicep/main.bicep` | 全体のエントリポイント。以下の各モジュールを呼び出す | `location`、共通タグ |
-| `iac/bicep/modules/network.bicep` | 手順2・手順3(VNet・5つのサブネット作成) | `vnetName`、`addressPrefix`、`subnets`(名前・CIDRの配列) |
-| `iac/bicep/modules/nsg.bicep` | 手順4・手順5(NSGとルールの作成) | `nsgName`、`securityRules`(優先度・方向・プロトコル・ポート・ソース/宛先・アクションの配列) |
-| `iac/bicep/modules/nsg-association.bicep` | 手順6(NSGとサブネットの関連付け) | `subnetId`、`nsgId` |
-| `iac/bicep/modules/bastion.bicep` | 手順7(Azure Bastionのデプロイ) | `bastionName`、`sku`(Basic)、`subnetId`、`publicIpName` |
-| `iac/bicep/parameters/prod.bicepparam` | 設計台帳の値そのもの(リソース名・CIDR・ポート番号等)をパラメータとして一元管理 | 本章で入力したすべての値 |
+| `infra/advanced/main.bicep` | 全体のエントリポイント。以下の各モジュールを呼び出す | `location`、`adminUsername`、`adminPassword`(@secure)、`sqlServiceAccountPassword`(@secure)、`alertEmailAddress`、`keyVaultAdministratorObjectId` |
+| `infra/advanced/modules/network.bicep` | 手順2〜6(VNet・5つのサブネット・5つのNSGとルール・サブネットへの関連付け) | ledgerの値を内部変数として保持(リソース名・CIDR固定) |
+| `infra/advanced/modules/security.bicep` | 手順7(Azure Bastionのデプロイ)+ Key Vaultの作成 | `bastionSubnetId`、`adminPassword`、`sqlServiceAccountPassword` |
+| `infra/advanced/modules/compute.bicep` | 次章(サーバー編)のVM作成に相当 | 各層のサブネットID、`adminUsername`、`adminPassword` |
+| `infra/advanced/modules/monitoring.bicep` | 05章(運用監視設計)に相当 | VM名・ID一覧、`alertEmailAddress` |
+| `infra/advanced/modules/backup.bicep` | 06章(バックアップ・DR設計)に相当 | VM名・ID一覧 |
 
-> **補足**:Bicepでは、NSGの1件のルールにつき`protocol`プロパティは`'Tcp'`・`'Udp'`・`'*'`等、単一の値しか指定できません。これはポータルの制約(6.1節)と同じAzureの仕様であり、コード上でも6.3〜6.6節と同様にTCP用・UDP用の2つのルールオブジェクトとして配列に定義する必要があります。
+> **補足**:Bicepでは、NSGの1件のルールにつき`protocol`プロパティは`'Tcp'`・`'Udp'`・`'*'`等、単一の値しか指定できません。これはポータルの制約(6.1節)と同じAzureの仕様であり、コード上でも6.3〜6.6節と同様にTCP用・UDP用の2つのルールオブジェクトとして配列に定義しています(`network.bicep`内のコメント参照)。
 
 ### 10.3 コマンド例
 
-Azure CLIとBicep CLIをインストールした端末から、以下のようなコマンドで構築します(実際のパラメータファイルの中身は`iac/bicep`配下の実装に従ってください)。
+Azure CLIとBicep CLIをインストールした端末から、以下のようなコマンドで構築します(パラメータの詳細は`infra/advanced/README.md`を参照)。
 
 ```bash
 # Azureへログイン
@@ -539,17 +539,21 @@ az group create \
   --name rg-sanrise-prod-jpe \
   --location japaneast
 
-# VNet/サブネット/NSG/Bastionの一括デプロイ(手順2〜7に相当)
-az deployment group create \
-  --resource-group rg-sanrise-prod-jpe \
-  --template-file iac/bicep/main.bicep \
-  --parameters iac/bicep/parameters/prod.bicepparam
+# 構文チェック
+az bicep build --file infra/advanced/main.bicep
 
-# デプロイ結果の検証(what-ifで事前に差分を確認する場合)
+# デプロイ内容の事前検証(what-ifで差分を確認)
 az deployment group what-if \
   --resource-group rg-sanrise-prod-jpe \
-  --template-file iac/bicep/main.bicep \
-  --parameters iac/bicep/parameters/prod.bicepparam
+  --template-file infra/advanced/main.bicep \
+  --parameters adminUsername='<VM管理者ユーザー名>' alertEmailAddress='<通知先メールアドレス>'
+
+# VNet/サブネット/NSG/Bastion/VM/監視/バックアップの一括デプロイ(手順2〜7および次章以降に相当)
+az deployment group create \
+  --resource-group rg-sanrise-prod-jpe \
+  --template-file infra/advanced/main.bicep \
+  --parameters adminUsername='<VM管理者ユーザー名>' alertEmailAddress='<通知先メールアドレス>'
+  # adminPassword / sqlServiceAccountPassword は @secure() のため実行時プロンプトで入力する
 ```
 
 `az deployment group create`は**宣言的**(こういう状態であるべき、という結果を記述する方式)にリソースを定義するため、既に同じ名前のリソースが存在する場合は新規作成ではなく差分の更新として動作します。これにより、手順1〜7を何度実行しても、意図せずリソースが重複作成される心配がなく、ポータルでの手作業よりも安全に「同じ環境を何度でも再現できる」という利点があります。

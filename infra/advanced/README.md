@@ -14,19 +14,19 @@
 実際にデプロイする前に、必ず以下を実行して構文エラーやリソース差分を確認してください。
 ```bash
 # 1) 構文チェック(ARM JSONへのコンパイルが通るか)
-az bicep build --file iac/bicep/main.bicep
+az bicep build --file infra/advanced/main.bicep
 
 # 2) デプロイ内容の事前検証
 az deployment group validate \
   --resource-group rg-sanrise-prod-jpe \
-  --template-file iac/bicep/main.bicep \
+  --template-file infra/advanced/main.bicep \
   --parameters adminUsername='<VM管理者ユーザー名>' \
                alertEmailAddress='<通知先メールアドレス>'
 
 # 3) 実際に作成/変更されるリソースの差分確認(What-If)
 az deployment group what-if \
   --resource-group rg-sanrise-prod-jpe \
-  --template-file iac/bicep/main.bicep \
+  --template-file infra/advanced/main.bicep \
   --parameters adminUsername='<VM管理者ユーザー名>' \
                alertEmailAddress='<通知先メールアドレス>'
 ```
@@ -37,7 +37,7 @@ az deployment group what-if \
 az deployment group create \
   --name deploy-sanrise-$(date +%Y%m%d%H%M) \
   --resource-group rg-sanrise-prod-jpe \
-  --template-file iac/bicep/main.bicep \
+  --template-file infra/advanced/main.bicep \
   --parameters adminUsername='<VM管理者ユーザー名>' \
                alertEmailAddress='<通知先メールアドレス>' \
                keyVaultAdministratorObjectId='<KeyVaultにシークレットを書き込む権限を持たせたいEntra IDオブジェクトID(任意)>'
