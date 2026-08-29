@@ -1,0 +1,5 @@
+infra/parameters/*.bicepparam
+!infra/parameters/*.example.bicepparam
+*.local.json
+.DS_Store
+Thumbs.db

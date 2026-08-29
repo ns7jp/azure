@@ -1,69 +1,142 @@
-# Azure構築案件パック(未経験からのサーバー構築エンジニア・ポートフォリオ)
+# Azure 構築案件パック
 
-**未経験からサーバー構築/インフラエンジニアへのキャリアチェンジを目指す人向けの、Azure構築案件の設計書一式(全13章)とIaC(Bicep)のポートフォリオです。**
+未経験からサーバー構築エンジニアを目指す人が、**設計・構築・試験・運用・説明**までを1つの模擬案件で学ぶポートフォリオです。
 
-架空の中堅商社「株式会社サンライズ物産」が、老朽化したオンプレミス基幹サーバー(受発注・在庫管理システム)をAzureへリフト&シフトする、という実務に近い設定のもとで、**要件定義 → 基本設計 → 詳細設計 → 構築手順 → テスト → 用語集 → 面接でのアピール方法**まで、実務の一連の流れを疑似体験できるように作成しています。
+> [!IMPORTANT]
+> このリポジトリの Azure リソースは既定では作成されません。`deploy.ps1` は What-If（変更予測）で止まります。実環境へのデプロイは課金、権限、リージョンの利用可否を確認してから `-Apply` を明示してください。
 
-専門用語には初出時に簡単な注釈を付け、各章の冒頭に要点、末尾に理解度チェック(Q&A)を用意するなど、**初心者でも読み進めながら無理なく理解・記憶できること**を最優先に設計しました。
-
-> 登場する企業名・人物・数値等はすべて学習目的の架空の設定であり、実在の企業・団体とは一切関係ありません。
-
-## この案件の概要
+## 30秒で分かる案件
 
 | 項目 | 内容 |
 |---|---|
-| 想定クライアント | 株式会社サンライズ物産(架空・卸売業・従業員約182名) |
-| 課題 | 基幹サーバーのハードウェア保守切れ、OSサポート切れ、単一拠点によるBCPリスク、属人化した管理アクセス、目視監視、テープバックアップ未検証 |
-| 対応方針 | Azure VM(IaaS)へのリフト&シフト、Bastion経由の統制された管理アクセス、Key Vault + Entra IDによる最小権限のセキュリティ、Log Analyticsによる予兆監視、Recovery Services Vaultによる自動バックアップ |
-| リージョン | Japan East(japaneast)単一リージョン |
-| 命名規則 | Microsoft Cloud Adoption Framework(CAF)準拠 |
+| 顧客 | 従業員50名の架空企業 Sample Works |
+| 依頼 | 小規模な社内向け Linux Web サーバーを Azure に構築したい |
+| 成果物 | 要件定義、基本・詳細設計、Bicep、試験、運用、障害対応、証跡 |
+| 構成 | Resource Group / VNet / Subnet / NSG / Public IP / NIC / Linux VM / Log Analytics / CPU Alert |
+| セキュリティ | SSH鍵認証、接続元CIDR制限、最小許可、HTTPS化前はHTTPを既定で閉鎖 |
+| コスト配慮 | 小さいVM、手動削除手順、概算前提の明記、What-If優先 |
+| 検証状態 | 静的検証とCIを用意。実Azure環境での構築は利用者が実施するまで `NOT RUN` |
 
-全体構成(VNet・5サブネット・5台のVM・Bastion・監視・バックアップ)の詳細は [`docs/01-architecture.md`](docs/01-architecture.md) の構成図を参照してください。
+## 覚え方：5つの「決」
 
-## ドキュメント構成
+1. **要件を決める** — 何を守り、いつまで動かすか
+2. **構成を決める** — どの Azure サービスを組み合わせるか
+3. **設定を決める** — IP、名前、サイズ、通信ルール
+4. **確認を決める** — 正常・異常をどう試験するか
+5. **運用を決める** — 監視、変更、障害、削除をどう行うか
 
-| No. | ドキュメント | 内容概要 |
+## アーキテクチャ
+
+```mermaid
+flowchart LR
+    Admin[管理者PC\n許可CIDRのみ] -->|SSH 22| NSG[Network Security Group]
+    User[利用者] -. HTTP 80\n既定は閉鎖 .-> NSG
+    NSG --> PIP[Public IP]
+    PIP --> NIC[Network Interface]
+    NIC --> VM[Ubuntu Linux VM\nNginx]
+    VM -. OSログ収集は発展課題 .-> LAW[Log Analytics Workspace]
+    VM --> Alert[CPU 使用率アラート]
+    VNet[VNet 10.20.0.0/16] --> Subnet[Subnet 10.20.1.0/24]
+    Subnet --> NIC
+```
+
+### 設計判断
+
+- SSHを全世界へ公開せず、`adminCidr` だけ許可します。
+- パスワード認証を無効化し、公開鍵だけを使います。
+- HTTPは `openHttp=false` が既定です。学習確認時だけ開け、本番想定では HTTPS、Application Gateway/WAF、Private Access 等を別途設計します。
+- CPUアラートはAzureプラットフォームメトリックを使います。Log Analyticsは学習用の受け皿だけを作り、OSログ収集に必要なAzure Monitor AgentとData Collection Ruleは発展課題として明示します。
+- 単一VMは学習費用を抑える判断です。高可用性要件があれば Availability Zones、Load Balancer、複数VMへ変更します。
+- リソース名とタグを統一し、誰の・何の・どの環境かを追跡します。
+
+## 学習ルート
+
+| 順番 | 教材 | 到達目標 |
+|---:|---|---|
+| 1 | [案件概要](docs/01-project-brief.md) | 顧客要望を技術要件へ変換できる |
+| 2 | [用語と全体像](docs/02-fundamentals.md) | Azureの部品を一言で説明できる |
+| 3 | [基本設計](docs/03-basic-design.md) | 構成と設計理由を説明できる |
+| 4 | [詳細設計](docs/04-detailed-design.md) | 実装に必要な値を読める |
+| 5 | [構築手順](docs/05-build-guide.md) | What-Ifから安全に構築できる |
+| 6 | [試験仕様](docs/06-test-plan.md) | 合否と証跡を残せる |
+| 7 | [運用・障害対応](docs/07-operations-runbook.md) | 初動、切り分け、復旧を行える |
+| 8 | [ポートフォリオ説明](docs/08-portfolio-guide.md) | 面接で設計判断を説明できる |
+| 9 | [不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md) | 現在地を判定し、次に補う内容を選べる |
+
+## 最短の使い方
+
+前提: Azure CLI、Bicep CLI、PowerShell 7、Azureサブスクリプション、SSH公開鍵。
+
+```powershell
+az login
+az account show --output table
+Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.bicepparam
+# dev.bicepparam の sshPublicKey と adminCidr を自分の値へ変更
+./scripts/deploy.ps1 -ParameterFile infra/parameters/dev.bicepparam
+```
+
+最後のコマンドは **What-Ifのみ** です。内容を確認して実際に作る場合:
+
+```powershell
+./scripts/deploy.ps1 -ParameterFile infra/parameters/dev.bicepparam -Apply
+./scripts/verify.ps1 -ResourceGroupName rg-portfolio-dev-jpe-001
+```
+
+学習終了後は、対象名を二重指定して削除します。
+
+```powershell
+./scripts/remove.ps1 `
+  -ResourceGroupName rg-portfolio-dev-jpe-001 `
+  -ConfirmResourceGroupName rg-portfolio-dev-jpe-001
+```
+
+## リポジトリ構成
+
+```text
+.
+├─ docs/                 設計・試験・運用・面接用ドキュメント(基礎編)
+│  └─ advanced/          発展編:より複雑な多層システム案件の設計書
+├─ evidence/             証跡テンプレート（秘密情報を保存しない）
+├─ infra/                Bicep とパラメーター例(基礎編)
+│  └─ advanced/          発展編:多層システム案件のBicep(参考実装)
+├─ scripts/              What-If、デプロイ、確認、削除
+└─ .github/workflows/    静的検証CI
+```
+
+## 安全ルール
+
+- 実在顧客名、メール、IP、テナントID、サブスクリプションID、秘密鍵をコミットしない。
+- 料金はリージョン、契約、時期で変わるため、実施直前に Azure Pricing Calculator と Cost Management で確認する。
+- `az account show` で対象を確認し、個人の学習用サブスクリプション以外では管理者承認を得る。
+- スクリーンショットは機密値をマスクし、テスト結果は成功だけでなく失敗と対処も記録する。
+- 本教材の単一VM構成を、そのまま本番環境へ転用しない。
+
+## この教材の現在地
+
+このリポジトリは、初心者が一連の工程を説明するための**良い最小構成**ですが、ファイルがそろっているだけではポートフォリオの完成ではありません。特に、Azure実機で取得した証跡、要件から試験までの追跡、通知を含む監視、復元試験は利用者が補う必要があります。
+
+「何が未完成で、どこまで実施すれば次のレベルか」は[不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md)にまとめています。まず必須課題だけを終え、発展機能を一度に追加しないことを推奨します。
+
+## 発展編:より複雑な案件で学ぶ(docs/advanced)
+
+基礎編(Sample Works社・単一VM)の一連の流れと[不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md)のチェックを一通り終えた人向けに、**より実務に近い規模の案件**を題材にした発展編を [`docs/advanced/`](docs/advanced/) に用意しています。
+
+| 項目 | 基礎編(本編) | 発展編(docs/advanced) |
 |---|---|---|
-| 00 | [案件概要・要件定義書](docs/00-overview-requirements.md) | 架空クライアントの背景・課題、機能要件/非機能要件/制約条件 |
-| 01 | [全体アーキテクチャ設計書](docs/01-architecture.md) | Azure構成図(Mermaid)、サービス選定理由、CAF命名規則 |
-| 02 | [ネットワーク設計書](docs/02-network-design.md) | VNet/サブネット構成、IPアドレス設計、NSGルールの読み方 |
-| 03 | [サーバー設計書](docs/03-server-design.md) | 各VM(AD/Web/AP/DB/ファイルサーバー)のスペック・役割・ディスク構成 |
-| 04 | [セキュリティ設計書](docs/04-security-design.md) | NSGルール一覧、Bastion、Key Vault、Entra ID/RBAC、暗号化方針 |
-| 05 | [運用監視設計書](docs/05-operations-monitoring.md) | Log Analytics、アラート設計、日常運用・パッチ適用・障害対応フロー |
-| 06 | [バックアップ・DR設計書](docs/06-backup-dr.md) | Recovery Services Vault、RPO/RTO、簡易DR方針 |
-| 07 | [コスト設計書](docs/07-cost-design.md) | 月額コスト試算・内訳、コスト最適化のアイデア |
-| 08 | [構築手順書(ネットワーク編)](docs/08-construction-procedure-network.md) | ポータル操作ベースのネットワーク基盤構築手順 |
-| 09 | [構築手順書(サーバー編)](docs/09-construction-procedure-server.md) | 各VMの作成からOS初期設定・役割設定までの手順 |
-| 10 | [テスト仕様書](docs/10-test-plan.md) | 接続性・セキュリティ・可用性・バックアップ試験のテストケース |
-| 11 | [用語集](docs/11-glossary.md) | 本パック全体で登場する専門用語の初心者向け解説 |
-| 12 | [ポートフォリオ活用ガイド](docs/12-portfolio-guide.md) | 面接での説明方法、想定質問と回答例、今後の発展課題 |
+| 想定クライアント | Sample Works(従業員50名) | 株式会社サンライズ物産(架空・従業員約182名) |
+| 構成 | Linux単一VM + Nginx | Windows Server 3層(Web/AP/DB)+ AD DS/DNS + ファイルサーバー、5サブネット |
+| 重点 | What-Ifによる安全な構築・証跡・CIでの静的検証 | 要件定義〜設計〜構築手順〜テスト〜用語集までの設計書としての厚み |
+| IaC | `infra/main.bicep`(`scripts/deploy.ps1`等と連携、What-If前提) | `infra/advanced/main.bicep`(学習用の参考実装。`az bicep build`等は利用者側で検証) |
 
-## IaC(Infrastructure as Code)
+発展編は基礎編の`scripts/deploy.ps1`等には未対応の**設計書+参考実装**であり、基礎編と同じ「What-Ifを先に見る」「秘密情報をコミットしない」という安全原則を踏まえたうえで、自己責任で読み進めてください。詳細は [`docs/advanced/00-overview-requirements.md`](docs/advanced/00-overview-requirements.md) から、IaCの補足は [`infra/advanced/README.md`](infra/advanced/README.md) を参照してください。
 
-上記の設計書で定義した内容を、学習・ポートフォリオ用のBicepテンプレートとして [`iac/bicep/`](iac/bicep/) 配下にまとめています。
+## 参考にした公式設計指針
 
-```
-iac/bicep/
-├── main.bicep                 # エントリポイント(各モジュールの呼び出し)
-└── modules/
-    ├── network.bicep           # VNet・サブネット・NSG
-    ├── security.bicep          # Azure Bastion・Key Vault
-    ├── compute.bicep           # 5台のVM・NIC
-    ├── monitoring.bicep        # Log Analytics・アラート
-    └── backup.bicep            # Recovery Services Vault・バックアップポリシー
-```
-
-実際にデプロイする前には、必ず `az bicep build` や `az deployment group what-if` などで検証してください。パスワード等の機密値は `@secure()` パラメータで受け渡す設計としており、コード中にハードコードはしていません。AD昇格やSQL Server初期設定など、IaCだけで完結しない作業は各Bicepファイル内のコメントに明記しています。デプロイ手順の詳細は [`iac/README.md`](iac/README.md) を参照してください。
-
-## このポートフォリオの使い方
-
-1. まず [`docs/00-overview-requirements.md`](docs/00-overview-requirements.md) で案件の背景と要件を把握する
-2. [`docs/01-architecture.md`](docs/01-architecture.md) で全体像をつかむ
-3. 02〜07章で各領域(ネットワーク/サーバー/セキュリティ/運用監視/バックアップ/コスト)の設計を読む
-4. 08〜09章の構築手順書で、実際にAzureポータル上で手を動かして検証する(任意)
-5. 10章でテスト観点を確認し、11章の用語集で専門用語を復習する
-6. 12章を参考に、転職活動・面接でこのポートフォリオをどう説明するか整理する
+- [Azure Well-Architected Framework](https://learn.microsoft.com/azure/well-architected/)
+- [Azure リソースの名前付け規則](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming)
+- [Bicep ドキュメント](https://learn.microsoft.com/azure/azure-resource-manager/bicep/)
+- [Azure CLI ドキュメント](https://learn.microsoft.com/cli/azure/)
 
 ## ライセンス
 
-[LICENSE](LICENSE) を参照してください。
+[MIT License](LICENSE)
