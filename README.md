@@ -62,6 +62,7 @@ flowchart LR
 | 7 | [運用・障害対応](docs/07-operations-runbook.md) | 初動、切り分け、復旧を行える |
 | 8 | [ポートフォリオ説明](docs/08-portfolio-guide.md) | 面接で設計判断を説明できる |
 | 9 | [不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md) | 現在地を判定し、次に補う内容を選べる |
+| 10 | [Stage 3 実施ランブック](docs/10-stage3-runbook.md) | 課金を伴う実機構築〜試験〜削除を、証跡を残しながら通しで実施できる |
 
 ## 最短の使い方
 
