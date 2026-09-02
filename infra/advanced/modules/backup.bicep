@@ -39,10 +39,9 @@ resource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-04-01' = {
     publicNetworkAccess: 'Enabled'
     // Azure Monitorへのバックアップジョブ失敗通知を有効化する(組み込みのバックアップアラート機能)。
     // これにより alert-backup-job-failure 相当の通知を補完する。
-    // 補足:このプロパティのスキーマはAPIバージョンにより変更される可能性があるため、
-    // az bicep build / what-if で必ず事前検証すること。
+    // 補足:プロパティ名は az bicep build の型チェックで検証済み(azureMonitorAlertSettings)。
     monitoringSettings: {
-      azureBackupSettings: {
+      azureMonitorAlertSettings: {
         alertsForAllJobFailures: 'Enabled'
       }
     }

@@ -16,7 +16,9 @@ jobs:
       - name: Build Bicep
         uses: azure/cli@v2
         with:
-          inlineScript: az bicep build --file infra/main.bicep --stdout > /dev/null
+          inlineScript: |
+            az bicep build --file infra/main.bicep --stdout > /dev/null
+            az bicep build --file infra/advanced/main.bicep --stdout > /dev/null
       - name: Check Markdown links are local or HTTPS
         shell: pwsh
         run: |
