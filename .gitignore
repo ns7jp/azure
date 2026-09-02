@@ -1,5 +1,7 @@
 infra/parameters/*.bicepparam
 !infra/parameters/*.example.bicepparam
+infra/advanced/parameters/*.bicepparam
+!infra/advanced/parameters/*.example.bicepparam
 *.local.json
 .DS_Store
 Thumbs.db

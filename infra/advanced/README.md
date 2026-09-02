@@ -62,6 +62,25 @@ az deployment group create \
 - Microsoft Defender for Cloud(Defender for Servers)のサブスクリプションスコープでの有効化
 - 初回バックアップ完了後のリストア検証・DR訓練の実施
 
+### パラメーターファイルを使う場合(推奨)
+
+毎回コマンドラインに値を並べる代わりに、`parameters/prod.example.bicepparam` をコピーして使えます。機密値(`adminPassword` / `sqlServiceAccountPassword`)はファイルに書かず、`readEnvironmentVariable()` で環境変数から読み込む形になっています。
+
+```bash
+cp infra/advanced/parameters/prod.example.bicepparam infra/advanced/parameters/prod.bicepparam
+# prod.bicepparam の alertEmailAddress 等を自分の値へ変更(コピー先は .gitignore で除外済み)
+
+read -s VM_ADMIN_PASSWORD && export VM_ADMIN_PASSWORD
+read -s SQL_SERVICE_ACCOUNT_PASSWORD && export SQL_SERVICE_ACCOUNT_PASSWORD
+
+az deployment group what-if \
+  --resource-group rg-sanrise-prod-jpe \
+  --template-file infra/advanced/main.bicep \
+  --parameters infra/advanced/parameters/prod.bicepparam
+```
+
+What-Ifの結果を確認したうえで、`what-if` を `create` に置き換えて実行します。
+
 ### 注意事項
 - 本コードは学習・ポートフォリオ用の参考実装です。実際の本番運用に用いる場合は、料金・可用性・セキュリティ要件を自社ポリシーに照らして必ずレビューし、`az bicep build` / `az deployment group what-if` による事前検証を行ってください。
 - パスワード等の機密値はコード中に直書きせず、@secure() パラメータおよびAzure Key Vaultで管理する設計としています。

@@ -24,8 +24,7 @@ param adminPassword string
 @secure()
 param sqlServiceAccountPassword string
 
-@description('Key Vaultに対してシークレットの管理権限(Key Vault Secrets Officer相当)を付与するEntra IDのオブジェクトID。'
-  + '空文字の場合はロール割り当てをスキップする(後から手動でアクセス権を付与すること)')
+@description('Key Vaultに対してシークレットの管理権限(Key Vault Secrets Officer相当)を付与するEntra IDのオブジェクトID。空文字の場合はロール割り当てをスキップする(後から手動でアクセス権を付与すること)')
 param keyVaultAdministratorObjectId string = ''
 
 // -----------------------------------------------------------------------------

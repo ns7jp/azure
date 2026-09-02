@@ -33,8 +33,7 @@ param location string = 'japaneast'
 @description('全VM共通のローカル管理者アカウント名')
 param adminUsername string
 
-@description('全VM共通のローカル管理者パスワード。@secure()によりログや出力に平文表示されない。'
-  + 'このパラメータの値はコマンドライン直書きではなく、Key Vault参照やパラメータファイル+実行時プロンプト等で渡すこと')
+@description('全VM共通のローカル管理者パスワード。@secure()によりログや出力に平文表示されない。このパラメータの値はコマンドライン直書きではなく、Key Vault参照やパラメータファイル+実行時プロンプト等で渡すこと')
 @secure()
 param adminPassword string
 
@@ -45,8 +44,7 @@ param sqlServiceAccountPassword string
 @description('監視アラートの通知先メールアドレス(運用担当者宛)')
 param alertEmailAddress string
 
-@description('Key Vaultにシークレット書き込み権限(Key Vault Secrets Officer相当)を付与するEntra IDオブジェクトID。'
-  + '空文字の場合はロール割り当てをスキップするため、デプロイ前後で手動で権限を付与すること')
+@description('Key Vaultにシークレット書き込み権限(Key Vault Secrets Officer相当)を付与するEntra IDオブジェクトID。空文字の場合はロール割り当てをスキップするため、デプロイ前後で手動で権限を付与すること')
 param keyVaultAdministratorObjectId string = ''
 
 // -----------------------------------------------------------------------------
