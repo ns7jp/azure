@@ -19,6 +19,15 @@ jobs:
           inlineScript: |
             az bicep build --file infra/main.bicep --stdout > /dev/null
             az bicep build --file infra/advanced/main.bicep --stdout > /dev/null
+      - name: Validate example parameter files
+        uses: azure/cli@v2
+        with:
+          # パラメーター例が main.bicep のパラメーター定義と食い違っていないかを検証する。
+          # 発展編の例は機密値を環境変数から読むため、検証用のダミー値を与える(実際の値ではない)。
+          inlineScript: |
+            az bicep build-params --file infra/parameters/dev.example.bicepparam --stdout > /dev/null
+            VM_ADMIN_PASSWORD=ci-dummy SQL_SERVICE_ACCOUNT_PASSWORD=ci-dummy \
+              az bicep build-params --file infra/advanced/parameters/prod.example.bicepparam --stdout > /dev/null
       - name: Check Markdown links are local or HTTPS
         shell: pwsh
         run: |
