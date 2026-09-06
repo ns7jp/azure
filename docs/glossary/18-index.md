@@ -20,6 +20,7 @@
 |---|---|---|
 | Accelerated Networking(高速ネットワーク) | 7.2.17 | [7. コンピューティング(仮想マシン)](07-compute.md#7217-accelerated-networking高速ネットワーク) |
 | ADR(Architecture Decision Record、設計判断記録) | 14.2.6 | [14. 現場でよく使う仕事の言葉](14-workplace.md#1426-adrarchitecture-decision-record設計判断記録) |
+| AMA(Azure Monitor Agent、Azure Monitorエージェント) | 10.2.13 | [10. 監視と運用](10-monitoring.md#10213-amaazure-monitor-agentazure-monitorエージェント) |
 | App ServiceとVMの使い分け(App Service、IaaSとPaaSの選択) | 7.2.21 | [7. コンピューティング(仮想マシン)](07-compute.md#7221-app-serviceとvmの使い分けapp-serviceiaasとpaasの選択) |
 | Application GatewayとWAF(Web Application Firewall) | 6.2.22 | [6. Azureのネットワークサービス](06-azure-network.md#6222-application-gatewayとwafweb-application-firewall) |
 | Application Insights(アプリケーションインサイツ) | 10.2.15 | [10. 監視と運用](10-monitoring.md#10215-application-insightsアプリケーションインサイツ) |
@@ -39,7 +40,6 @@
 | Azure Key Vault(キーボルト) | 9.2.15 | [9. ID・アクセス管理とセキュリティ](09-identity-security.md#9215-azure-key-vaultキーボルト) |
 | Azure Load Balancer(ロードバランサー) | 6.2.21 | [6. Azureのネットワークサービス](06-azure-network.md#6221-azure-load-balancerロードバランサー) |
 | Azure Monitor(アジュールモニター) | 10.2.1 | [10. 監視と運用](10-monitoring.md#1021-azure-monitorアジュールモニター) |
-| Azure Monitor Agent(AMA、Azure Monitorエージェント) | 10.2.13 | [10. 監視と運用](10-monitoring.md#10213-azure-monitor-agentamaazure-monitorエージェント) |
 | Azure Monitor と Log Analyticsワークスペース | 15.2.10 | [15. 混同しやすい用語の対比](15-confusions.md#15210-azure-monitor-と-log-analyticsワークスペース) |
 | Azure Policy | 4.2.12 | [4. 契約と管理階層・ガバナンス](04-governance.md#4212-azure-policy) |
 | Azure Portal | 4.2.15 | [4. 契約と管理階層・ガバナンス](04-governance.md#4215-azure-portal) |
@@ -71,6 +71,7 @@
 
 | 用語 | 項番 | 収録先 |
 |---|---|---|
+| DCR(Data Collection Rule、データ収集ルール) | 10.2.14 | [10. 監視と運用](10-monitoring.md#10214-dcrdata-collection-ruleデータ収集ルール) |
 | DNSと名前解決(DNS、Domain Name System / Name Resolution) | 5.2.15 | [5. ネットワークの基礎(Azure以前に必要な知識)](05-network-basics.md#5215-dnsと名前解決dnsdomain-name-system--name-resolution) |
 | DR(Disaster Recovery、災害復旧) | 11.2.13 | [11. バックアップ・可用性・障害対応](11-backup-dr.md#11213-drdisaster-recovery災害復旧) |
 
@@ -121,7 +122,7 @@
 |---|---|---|
 | Linuxでのディスク追加手順(パーティション、フォーマット、マウント) | 8.2.9 | [8. ストレージとディスク](08-storage.md#829-linuxでのディスク追加手順パーティションフォーマットマウント) |
 | Load Balancer と Application Gateway | 15.2.5 | [15. 混同しやすい用語の対比](15-confusions.md#1525-load-balancer-と-application-gateway) |
-| Log Analyticsワークスペース(Log Analytics Workspace、LAW) | 10.2.5 | [10. 監視と運用](10-monitoring.md#1025-log-analyticsワークスペースlog-analytics-workspacelaw) |
+| Log Analyticsワークスペース(Log Analytics Workspace、略してLAW) | 10.2.5 | [10. 監視と運用](10-monitoring.md#1025-log-analyticsワークスペースlog-analytics-workspace略してlaw) |
 
 ### M
 
@@ -235,7 +236,7 @@
 | アラートの重大度(Severity、Sev 0から4) | ジュウダイド | 10.2.9 | [10. 監視と運用](10-monitoring.md#1029-アラートの重大度severitysev-0から4) |
 | アラートルール(Alert Rule、メトリックアラート / ログアラート) | アラートルール | 10.2.7 | [10. 監視と運用](10-monitoring.md#1027-アラートルールalert-ruleメトリックアラート--ログアラート) |
 | 一次切り分けとエスカレーション | イチジキリワケ / エスカレーション | 10.2.21 | [10. 監視と運用](10-monitoring.md#10221-一次切り分けとエスカレーション) |
-| 一時ディスク(Temporary Disk、リソースディスク、temp / エフェメラル) | いちじディスク | 8.2.4 | [8. ストレージとディスク](08-storage.md#824-一時ディスクtemporary-diskリソースディスクtemp--エフェメラル) |
+| 一時ディスク(Temporary Disk、リソースディスク、temp) | いちじディスク | 8.2.4 | [8. ストレージとディスク](08-storage.md#824-一時ディスクtemporary-diskリソースディスクtemp) |
 | インシデントと障害対応(incident / incident response) | インシデント、しょうがいたいおう | 14.2.19 | [14. 現場でよく使う仕事の言葉](14-workplace.md#14219-インシデントと障害対応incident--incident-response) |
 | インバウンドとアウトバウンド(Inbound / Outbound、受信と送信) | インバウンドとアウトバウンド | 5.2.22 | [5. ネットワークの基礎(Azure以前に必要な知識)](05-network-basics.md#5222-インバウンドとアウトバウンドinbound--outbound受信と送信) |
 | ウェルノウンポート(Well-known Ports、よく知られたポート番号) | ウェルノウンポート | 5.2.18 | [5. ネットワークの基礎(Azure以前に必要な知識)](05-network-basics.md#5218-ウェルノウンポートwell-known-portsよく知られたポート番号) |
@@ -284,7 +285,7 @@
 | サブネット(Subnet) | サブネット | 6.2.3 | [6. Azureのネットワークサービス](06-azure-network.md#623-サブネットsubnet) |
 | サブネットマスク(Subnet Mask) | サブネットマスク | 5.2.9 | [5. ネットワークの基礎(Azure以前に必要な知識)](05-network-basics.md#529-サブネットマスクsubnet-mask) |
 | サービスエンドポイント(Service Endpoint) | サービスエンドポイント | 6.2.25 | [6. Azureのネットワークサービス](06-azure-network.md#6225-サービスエンドポイントservice-endpoint) |
-| サービスエンドポイント と プライベートエンドポイント | 前者はサブネットからの出口を絞る仕組み、後者は相手サービスを自分のサブネットに引き込む仕組み | 15.2.4 | [15. 混同しやすい用語の対比](15-confusions.md#1524-サービスエンドポイント-と-プライベートエンドポイント) |
+| サービスエンドポイント と プライベートエンドポイント | サービスエンドポイントは相手サービスへの経路をAzure内に寄せ、相手側で「このサブネットからのみ許可」と絞れるようにする仕組み、プライベートエンドポイントは相手サービスを自分のサブネットに引き込む仕組み | 15.2.4 | [15. 混同しやすい用語の対比](15-confusions.md#1524-サービスエンドポイント-と-プライベートエンドポイント) |
 | サービスタグ(Service Tag) | サービスタグ | 6.2.12 | [6. Azureのネットワークサービス](06-azure-network.md#6212-サービスタグservice-tag) |
 | サービスプリンシパルとアプリ登録(Service Principal / App Registration) | サービスプリンシパル | 9.2.14 | [9. ID・アクセス管理とセキュリティ](09-identity-security.md#9214-サービスプリンシパルとアプリ登録service-principal--app-registration) |
 | シグナル・しきい値・集約粒度・評価頻度 | シグナル / シキイチ / シュウヤクリュウド / ヒョウカヒンド | 10.2.8 | [10. 監視と運用](10-monitoring.md#1028-シグナルしきい値集約粒度評価頻度) |
@@ -342,7 +343,6 @@
 | データセンター(Data Center) | データセンター | 3.2.3 | [3. クラウドとAzureの基礎概念](03-cloud-basics.md#323-データセンターdata-center) |
 | データディスク(Data Disk) | データディスク | 8.2.3 | [8. ストレージとディスク](08-storage.md#823-データディスクdata-disk) |
 | データの冗長構成(LRS / ZRS / GRS / RA-GRS) | データのじょうちょうこうせい | 8.2.15 | [8. ストレージとディスク](08-storage.md#8215-データの冗長構成lrs--zrs--grs--ra-grs) |
-| データ収集ルール(DCR、Data Collection Rule) | データ シュウシュウ ルール | 10.2.14 | [10. 監視と運用](10-monitoring.md#10214-データ収集ルールdcrdata-collection-rule) |
 | データ転送(下り / Egress)課金 | エグレス | 12.2.4 | [12. コスト管理](12-cost.md#1224-データ転送下り--egress課金) |
 | トレーサビリティ(traceability、追跡性) | トレーサビリティ | 14.2.13 | [14. 現場でよく使う仕事の言葉](14-workplace.md#14213-トレーサビリティtraceability追跡性) |
 | ドライラン(dry run、空打ち) | ドライラン | 14.2.8 | [14. 現場でよく使う仕事の言葉](14-workplace.md#1428-ドライランdry-run空打ち) |
