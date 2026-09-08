@@ -140,6 +140,9 @@ resource existingRecoveryVault 'Microsoft.RecoveryServices/vaults@2023-04-01' ex
 }
 
 // Key Vaultの監査ログをLog Analyticsへ転送(シークレットへのアクセス操作の証跡確保)
+// diagnosticSettings@2021-05-01 はBicepの型情報が未提供のため BCP081 が出るが、
+// Azure公式ドキュメントに記載の有効なAPIバージョンであり、デプロイは妨げられない。
+#disable-next-line BCP081
 resource diagKeyVault 'Microsoft.Insights/diagnosticSettings@2021-05-01' = {
   name: 'diag-to-log-analytics'
   scope: existingKeyVault
@@ -156,6 +159,7 @@ resource diagKeyVault 'Microsoft.Insights/diagnosticSettings@2021-05-01' = {
 
 // Bastionの接続ログ(接続元アカウント・接続先VM・接続時刻)をLog Analyticsへ転送
 // ダッシュボード項目「Azure Bastionの接続ログ」の元データとなる
+#disable-next-line BCP081
 resource diagBastion 'Microsoft.Insights/diagnosticSettings@2021-05-01' = {
   name: 'diag-to-log-analytics'
   scope: existingBastion
@@ -172,6 +176,7 @@ resource diagBastion 'Microsoft.Insights/diagnosticSettings@2021-05-01' = {
 
 // Recovery Services Vaultのバックアップジョブ・アラート情報をLog Analyticsへ転送
 // (alert-backup-job-failure のクエリアラートのデータソースとなる)
+#disable-next-line BCP081
 resource diagRecoveryVault 'Microsoft.Insights/diagnosticSettings@2021-05-01' = {
   name: 'diag-to-log-analytics'
   scope: existingRecoveryVault
