@@ -18,6 +18,9 @@ if ($parameterText -match 'param\s+adminCidr\s*=\s*[''"](?:0\.0\.0\.0/0|\*)[''"]
 if ($parameterText -match 'REPLACE_WITH_YOUR_PUBLIC_KEY') {
     throw 'Replace the example SSH public key before running What-If.'
 }
+if ($parameterText -match 'REPLACE_WITH_YOUR_ALERT_EMAIL') {
+    throw 'Replace the example alert email address before running What-If.'
+}
 if ($parameterText -match 'BEGIN (?:OPENSSH|RSA|EC|DSA) PRIVATE KEY') {
     throw 'A private key appears to be present. Use only an SSH public key and remove the private key from this file.'
 }
