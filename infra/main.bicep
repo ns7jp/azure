@@ -66,7 +66,20 @@ module workload 'modules/workload.bicep' = {
   }
 }
 
+module backup 'modules/backup.bicep' = {
+  name: 'backup-${environment}'
+  scope: resourceGroup
+  params: {
+    location: location
+    suffix: suffix
+    commonTags: commonTags
+    vmName: workload.outputs.vmName
+    vmId: workload.outputs.vmId
+  }
+}
+
 output resourceGroupName string = resourceGroup.name
 output vmName string = workload.outputs.vmName
 output publicIpAddress string = workload.outputs.publicIpAddress
 output sshCommand string = 'ssh ${adminUsername}@${workload.outputs.publicIpAddress}'
+output recoveryVaultName string = backup.outputs.recoveryVaultName
