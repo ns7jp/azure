@@ -13,12 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Bicep
+      - name: Build Bicep (fail on linter warnings)
         uses: azure/cli@v2
         with:
           inlineScript: |
-            az bicep build --file infra/main.bicep --stdout > /dev/null
-            az bicep build --file infra/advanced/main.bicep --stdout > /dev/null
+            set -e
+            status=0
+            for file in infra/main.bicep infra/advanced/main.bicep; do
+              echo "Building $file"
+              output=$(az bicep build --file "$file" --stdout 2>&1 1>/dev/null) || status=1
+              if [ -n "$output" ]; then
+                echo "$output"
+                status=1
+              fi
+            done
+            if [ "$status" -ne 0 ]; then
+              echo "Bicep build failed or produced linter warnings. Fix them before merging."
+              exit 1
+            fi
       - name: Validate example parameter files
         uses: azure/cli@v2
         with:
@@ -35,3 +47,30 @@ jobs:
           if ($bad) { $bad; throw 'Use HTTPS links in Markdown.' }
       - name: Check whitespace
         run: git diff --check
+      - name: Safety configuration checks
+        shell: pwsh
+        run: |
+          # 09-gap-analysis-and-roadmap.md の「高: HTTPSと安全な管理経路」「必須: 要件・設計・実装・試験の追跡」に対応し、
+          # 基礎編の安全設定（既定でHTTP閉鎖、SSHはadminCidrのみ許可、0.0.0.0/0の拒否）が退行していないかをCIで検知する。
+          $mainBicep = Get-Content infra/main.bicep -Raw
+          if ($mainBicep -notmatch 'param openHttp bool = false') {
+            throw 'infra/main.bicep: openHttp の既定値は false のままにしてください。'
+          }
+
+          $workload = Get-Content infra/modules/workload.bicep -Raw
+          if ($workload -notmatch 'sourceAddressPrefix:\s*adminCidr') {
+            throw 'infra/modules/workload.bicep: SSHルールのsourceAddressPrefixはadminCidrに限定してください。'
+          }
+          if ($workload -notmatch '\], openHttp \? \[') {
+            throw 'infra/modules/workload.bicep: HTTPルールはopenHttpがtrueの場合のみ追加される構造を保ってください。'
+          }
+          if ($workload -match "sourceAddressPrefix:\s*'\*'") {
+            throw "infra/modules/workload.bicep: NSGルールのsourceAddressPrefixに '*' を使わないでください。"
+          }
+
+          $deployScript = Get-Content scripts/deploy.ps1 -Raw
+          if ($deployScript -notmatch [regex]::Escape('0\.0\.0\.0/0')) {
+            throw 'scripts/deploy.ps1: adminCidrが0.0.0.0/0の場合に停止するチェックを保ってください。'
+          }
+
+          Write-Host 'Safety configuration checks passed.'
