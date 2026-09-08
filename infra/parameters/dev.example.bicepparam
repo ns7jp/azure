@@ -9,3 +9,4 @@ param adminCidr = '203.0.113.10/32'
 param openHttp = false
 param vmSize = 'Standard_B1s'
 param adminUsername = 'azureadmin'
+param alertEmailAddress = 'REPLACE_WITH_YOUR_ALERT_EMAIL@example.com'
