@@ -15,6 +15,7 @@ az account show --output table
 - Contributor相当の作成権限があるか。
 - 予算アラートはAzure Portal側で設定済みか。
 - SSH公開鍵があり、秘密鍵を安全に保管したか。
+- CPU/バックアップアラートを受け取るメールアドレスを用意したか。
 
 鍵がない場合（既存ファイルを上書きしない）:
 
@@ -34,6 +35,7 @@ Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.biceppara
 - `sshPublicKey`: `.pub` の1行。秘密鍵ではない
 - `adminCidr`: 現在のグローバルIPv4 `/32`
 - `openHttp`: Web確認が必要な短時間だけ `true`
+- `alertEmailAddress`: CPUアラート・バックアップジョブ失敗通知(Action Group)を受け取るメールアドレス。プレースホルダーのままだと`deploy.ps1`が停止する
 
 `dev.bicepparam` は `.gitignore` 対象である。念のためコミット前に `git diff --cached` を確認する。
 
@@ -87,3 +89,4 @@ curl.exe --fail --max-time 10 "http://$ip"
 - Web確認後は `openHttp=false` に戻して再デプロイする。
 - 作業場所が変わったら `adminCidr` を更新する。
 - 学習を中断する場合、VMの停止だけではPublic IPやDisk等の課金が残り得る。不要ならRGを削除する。
+- Recovery Services VaultにバックアップされたVMがある状態でRGを削除する場合は `scripts/remove.ps1` を使う。`az group delete` を直接実行すると、バックアップ保護が残っていて削除に失敗することがある(`remove.ps1` は削除前に自動でバックアップ保護を解除する)。
