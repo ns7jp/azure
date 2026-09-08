@@ -22,7 +22,11 @@ $requiredTypes = @(
     'Microsoft.Network/networkInterfaces',
     'Microsoft.Compute/virtualMachines',
     'Microsoft.OperationalInsights/workspaces',
-    'Microsoft.Insights/metricAlerts'
+    'Microsoft.Insights/metricAlerts',
+    'Microsoft.Insights/actionGroups',
+    'Microsoft.Insights/dataCollectionRules',
+    'Microsoft.Insights/dataCollectionRuleAssociations',
+    'Microsoft.Compute/virtualMachines/extensions'
 )
 
 $failed = $false
