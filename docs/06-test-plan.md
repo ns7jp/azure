@@ -22,6 +22,8 @@
 | MN-01 | 監視 | CPUアラート定義を表示 | 対象VM、80%、有効 |
 | MN-02 | 監視 | CPUアラートを意図的に発火させ、Action Group宛のメールを確認 | `alertEmailAddress`宛に通知が到達 |
 | MN-03 | 監視 | Log AnalyticsでKQL `Perf \| where Computer contains "vm-" \| take 10` と `Syslog \| take 10` を実行 | 直近収集分のレコードが返る |
+| BK-01 | バックアップ | `az backup job list --resource-group <rg> --vault-name rsv-<suffix> --output table` | 初回バックアップジョブが`Completed` |
+| BK-02 | 復元 | `az backup restore restore-disks` 等で別名(例: `vm-restore-test`)へ復元し、SSH/Nginxが動作することを確認 | 復元VMが正常に起動し、元VMへ影響がない |
 | OP-01 | 再現性 | 同一Bicepを再デプロイ | 不要な置換なし |
 | CL-01 | 削除 | `remove.ps1`後にRG照会 | RGが存在しない |
 
@@ -42,6 +44,7 @@ journalctl -u nginx --since "30 minutes ago" --no-pager
 
 - SSH異常試験は、自分を締め出さないよう別経路または現在のセッションを保持して行う。
 - CPU負荷生成は費用・監視影響を理解した隔離学習環境だけで短時間実施する(例: `stress-ng --cpu 1 --timeout 360s`)。
+- 復元試験(BK-02)は必ず別名の隔離VMへ復元し、元のVMやNSG/Public IPを上書きしない。復元後の検証が終わったら、復元用VMを速やかに削除して二重課金を避ける。
 - 本番や共有環境でサービス停止、DoS相当、無断スキャンを行わない。
 
 ## 合否判定
