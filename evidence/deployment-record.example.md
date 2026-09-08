@@ -23,7 +23,7 @@
 
 ## What-If予想と実測
 
-What-Ifを実行する **前** に予想を書き、実行後に実測を転記して差を記録する（ロードマップ Stage 2 の課題）。予想の材料は `infra/main.bicep`、`infra/modules/workload.bicep`、`scripts/verify.ps1`。
+What-Ifを実行する **前** に予想を書き、実行後に実測を転記して差を記録する（ロードマップ Stage 2 の課題）。予想の材料は `infra/main.bicep`、`infra/modules/workload.bicep`、`infra/modules/backup.bicep`、`scripts/verify.ps1`。
 
 | リソース種類 | 予想した名前 | 予想個数 | What-If実測 | 一致 | 差の理由 |
 |---|---|---|---|---|---|
@@ -33,8 +33,13 @@ What-Ifを実行する **前** に予想を書き、実行後に実測を転記�
 | Microsoft.Network/publicIPAddresses | | | | | |
 | Microsoft.Network/networkInterfaces | | | | | |
 | Microsoft.Compute/virtualMachines | | | | | |
+| Microsoft.Compute/virtualMachines/extensions | | | | | |
 | Microsoft.OperationalInsights/workspaces | | | | | |
 | Microsoft.Insights/metricAlerts | | | | | |
+| Microsoft.Insights/actionGroups | | | | | |
+| Microsoft.Insights/dataCollectionRules | | | | | |
+| Microsoft.Insights/dataCollectionRuleAssociations | | | | | |
+| Microsoft.RecoveryServices/vaults | | | | | |
 | （予想に無かったもの） | | | | | |
 
 ## 試験結果
@@ -53,7 +58,12 @@ What-Ifを実行する **前** に予想を書き、実行後に実測を転記�
 | NT-04 | | `openHttp=true` で HTTP 200（任意） | | NOT RUN | |
 | OS-01 | | Nginx active | | NOT RUN | |
 | OS-02 | | Nginx が 80/tcp を Listen | | NOT RUN | |
-| MN-01 | | CPUアラート: 対象VM、80%、有効 | | NOT RUN | |
+| OS-03 | | Azure Monitor Agentが稼働中 | | NOT RUN | |
+| MN-01 | | CPUアラート: 対象VM、80%、有効、Action Group接続 | | NOT RUN | |
+| MN-02 | | CPUアラート発火時に通知メールが到達 | | NOT RUN | |
+| MN-03 | | Log AnalyticsのPerf/SyslogがKQLで参照可能 | | NOT RUN | |
+| BK-01 | | 初回バックアップジョブがCompleted | | NOT RUN | |
+| BK-02 | | 隔離環境への復元、Nginx等の動作確認 | | NOT RUN | |
 | OP-01 | | 再What-Ifで不要な置換なし | | NOT RUN | |
 | CL-01 | | RG削除後に存在しない | | NOT RUN | |
 
@@ -70,6 +80,7 @@ What-Ifを実行する **前** に予想を書き、実行後に実測を転記�
 | 項目 | 記録 |
 |---|---|
 | `remove.ps1` 実行日時 | |
+| Recovery Services Vaultのバックアップ保護解除結果 | `<remove.ps1が自動実行。エラーが無いか>` |
 | `az group exists` の結果 | `<false が期待値>` |
 | Cost Management 確認日時と実績 | `<期間・金額・RG外の残存有無>` |
 | `openHttp` を `false` に戻したか | `<NT-04 実施時のみ>` |
