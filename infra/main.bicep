@@ -30,6 +30,9 @@ param openHttp bool = false
 param vmSize string = 'Standard_B1s'
 param adminUsername string = 'azureadmin'
 
+@description('CPUアラート・OSログ関連アラートの通知先メールアドレス(運用担当者)')
+param alertEmailAddress string
+
 var regionCode = location == 'japaneast' ? 'jpe' : take(replace(location, ' ', ''), 3)
 var suffix = '${projectName}-${environment}-${regionCode}-001'
 var resourceGroupName = 'rg-${suffix}'
@@ -59,6 +62,7 @@ module workload 'modules/workload.bicep' = {
     openHttp: openHttp
     vmSize: vmSize
     adminUsername: adminUsername
+    alertEmailAddress: alertEmailAddress
   }
 }
 
