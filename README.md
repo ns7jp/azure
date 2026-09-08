@@ -12,7 +12,7 @@
 | 顧客 | 従業員50名の架空企業 Sample Works |
 | 依頼 | 小規模な社内向け Linux Web サーバーを Azure に構築したい |
 | 成果物 | 要件定義、基本・詳細設計、Bicep、試験、運用、障害対応、証跡 |
-| 構成 | Resource Group / VNet / Subnet / NSG / Public IP / NIC / Linux VM / Log Analytics / CPU Alert |
+| 構成 | Resource Group / VNet / Subnet / NSG / Public IP / NIC / Linux VM / Log Analytics / CPU Alert / Action Group / AMA(Azure Monitor Agent) |
 | セキュリティ | SSH鍵認証、接続元CIDR制限、最小許可、HTTPS化前はHTTPを既定で閉鎖 |
 | コスト配慮 | 小さいVM、手動削除手順、概算前提の明記、What-If優先 |
 | 検証状態 | 静的検証とCIを用意。実Azure環境での構築は利用者が実施するまで `NOT RUN` |
@@ -34,18 +34,19 @@ flowchart LR
     NSG --> PIP[Public IP]
     PIP --> NIC[Network Interface]
     NIC --> VM[Ubuntu Linux VM\nNginx]
-    VM -. OSログ収集は発展課題 .-> LAW[Log Analytics Workspace]
+    VM -->|AMA + DCR: Perf/Syslog| LAW[Log Analytics Workspace]
     VM --> Alert[CPU 使用率アラート]
+    Alert --> AG[Action Group\nメール通知]
     VNet[VNet 10.20.0.0/16] --> Subnet[Subnet 10.20.1.0/24]
     Subnet --> NIC
 ```
 
 ### 設計判断
 
-- SSHを全世界へ公開せず、`adminCidr` だけ許可します。
+- SSHを全世界へ公開せず、`adminCidr` だけ許可します。管理アクセス経路をBastion/VPNではなくPublic IP直結のままとする理由は[ADR-002](docs/decisions/ADR-002-bastion-vs-public-ip.md)にまとめています。
 - パスワード認証を無効化し、公開鍵だけを使います。
 - HTTPは `openHttp=false` が既定です。学習確認時だけ開け、本番想定では HTTPS、Application Gateway/WAF、Private Access 等を別途設計します。
-- CPUアラートはAzureプラットフォームメトリックを使います。Log Analyticsは学習用の受け皿だけを作り、OSログ収集に必要なAzure Monitor AgentとData Collection Ruleは発展課題として明示します。
+- CPUアラートはAzureプラットフォームメトリックを使い、Action Group経由でメール通知します。OSログ収集はAzure Monitor Agent(AMA)とData Collection Rule(DCR)で、CPU/ディスク空き容量のカウンターとsyslogをLog Analyticsへ送信します。採用理由と実機検証の進め方は[ADR-003](docs/decisions/ADR-003-action-group-and-os-log-collection.md)を参照してください。
 - 単一VMは学習費用を抑える判断です。高可用性要件があれば Availability Zones、Load Balancer、複数VMへ変更します。
 - リソース名とタグを統一し、誰の・何の・どの環境かを追跡します。
 
@@ -76,7 +77,7 @@ flowchart LR
 az login
 az account show --output table
 Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.bicepparam
-# dev.bicepparam の sshPublicKey と adminCidr を自分の値へ変更
+# dev.bicepparam の sshPublicKey、adminCidr、alertEmailAddress を自分の値へ変更
 ./scripts/deploy.ps1 -ParameterFile infra/parameters/dev.bicepparam
 ```
 
@@ -118,7 +119,7 @@ Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.biceppara
 
 ## この教材の現在地
 
-このリポジトリは、初心者が一連の工程を説明するための**良い最小構成**ですが、ファイルがそろっているだけではポートフォリオの完成ではありません。特に、Azure実機で取得した証跡、要件から試験までの追跡、通知を含む監視、復元試験は利用者が補う必要があります。
+このリポジトリは、初心者が一連の工程を説明するための**良い最小構成**ですが、ファイルがそろっているだけではポートフォリオの完成ではありません。特に、Azure実機で取得した証跡、要件から試験までの追跡、通知の到達確認、復元試験は利用者が補う必要があります。
 
 「何が未完成で、どこまで実施すれば次のレベルか」は[不足点と学習ロードマップ](docs/09-gap-analysis-and-roadmap.md)にまとめています。まず必須課題だけを終え、発展機能を一度に追加しないことを推奨します。
 
