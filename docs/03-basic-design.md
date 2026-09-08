@@ -26,7 +26,7 @@ Azure Well-Architected Frameworkの5柱を、この学習案件では次のよ�
 
 ### 可用性
 
-学習版は単一VM。RTO（目標復旧時間）は4時間、RPO（許容データ損失）は24時間を仮置きするが、バックアップが対象外のため本番要件は満たさない。
+学習版は単一VM。RTO(目標復旧時間)は4時間、RPO(許容データ損失)は24時間を仮置きするが、バックアップが対象外のため本番要件は満たさない。
 
 ### セキュリティ
 
@@ -35,6 +35,7 @@ Azure Well-Architected Frameworkの5柱を、この学習案件では次のよ�
 - 認証: パスワードログインを無効化する。
 - 秘密管理: 秘密鍵をAzureやGitへ置かない。
 - 証跡: テナントID等をマスクする。
+- 管理アクセス経路: Public IP直結を維持し、Azure Bastion/VPN Gatewayは本教材の規模には過剰と判断して不採用とした。比較の詳細は[ADR-002](decisions/ADR-002-bastion-vs-public-ip.md)を参照。
 
 ### 監視
 
@@ -60,4 +61,4 @@ CPUアラートはVMのプラットフォームメトリックを直接監視す
 
 ## 5. 将来構成
 
-本番要件が追加されたら、Public IP直結をやめ、Application Gateway/WAF、Private Endpoint/Bastion、Availability Zones、Backup、Defender for Cloud、通知付きAction Groupを検討する。
+本番要件が追加されたら、Public IP直結をやめ、Application Gateway/WAF、Private Endpoint/Bastion、Availability Zones、Backup、Defender for Cloud、通知付きAction Groupを検討する。Public IP直結からBastion/VPNへ切り替える判断基準は[ADR-002](decisions/ADR-002-bastion-vs-public-ip.md)の「見直し条件」を参照。
