@@ -26,7 +26,8 @@ $requiredTypes = @(
     'Microsoft.Insights/actionGroups',
     'Microsoft.Insights/dataCollectionRules',
     'Microsoft.Insights/dataCollectionRuleAssociations',
-    'Microsoft.Compute/virtualMachines/extensions'
+    'Microsoft.Compute/virtualMachines/extensions',
+    'Microsoft.RecoveryServices/vaults'
 )
 
 $failed = $false
