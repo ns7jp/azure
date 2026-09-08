@@ -57,9 +57,23 @@ az vm image show --location japaneast --urn Canonical:ubuntu-24_04-lts:server:la
 > [!NOTE]
 > 実Azure環境でのアラートメール到達確認、および収集したPerf/Syslogテーブルに対するKQLクエリの実行結果は、利用者が[Stage 3実施ランブック](10-stage3-runbook.md)に沿って実施し証跡を残すまで`NOT RUN`である。採用理由は[ADR-003](decisions/ADR-003-action-group-and-os-log-collection.md)を参照。
 
+## バックアップ
+
+| 項目 | 値 |
+|---|---|
+| Recovery Services Vault | `rsv-<suffix>`、SKU `RS0`/`Standard` |
+| ストレージ冗長性 | LRS(ローカル冗長ストレージ、コスト優先) |
+| バックアップポリシー | `bkp-<suffix>`、毎日02:00(Tokyo Standard Time)、AzureIaasVM |
+| 保持期間 | 30日(週次・月次の長期保持は対象外) |
+| 保護対象 | 単一VM(`vm-<suffix>`)全体 |
+| ジョブ失敗通知 | Recovery Services Vaultの組み込みAzure Monitor連携(`alertsForAllJobFailures`) |
+
+> [!NOTE]
+> 初回バックアップジョブの完了、および隔離環境への復元試験(試験ID `BK-02`)は、利用者が[Stage 3実施ランブック](10-stage3-runbook.md)に沿って実施し証跡を残すまで`NOT RUN`である。採用理由・冗長性をLRSとした判断・復元手順は[ADR-004](decisions/ADR-004-backup-policy.md)と[07. 運用・障害対応Runbook](07-operations-runbook.md)の「バックアップ・復元」を参照。
+
 ## 依存関係
 
-`Resource Group → VNet/NSG/Public IP/Workspace → NIC → VM → AMA拡張機能 → DCR関連付け / CPUアラート(Action Group経由)`
+`Resource Group → VNet/NSG/Public IP/Workspace → NIC → VM → AMA拡張機能 → DCR関連付け / CPUアラート(Action Group経由) → Recovery Services Vault → バックアップポリシー → 保護対象登録`
 
 Bicepが依存関係を解析するため、手動で作成順を覚えるより、各リソースが何を参照するかを理解する。
 
@@ -72,3 +86,4 @@ Bicepが依存関係を解析するため、手動で作成順を覚えるより
 | Address Space変更 | 再構築・接続影響 | 重複、将来接続、NIC割当 |
 | HTTP開放 | 攻撃面増加 | 公開の必要性、TLS/WAF要件 |
 | alertEmailAddress変更 | 通知の受信可否 | 受信ボックスの到達確認、迷惑メール設定 |
+| バックアップポリシー変更 | 保持期間・コスト・復旧可能範囲 | 保持要件、ストレージ課金、既存復元ポイントへの影響 |

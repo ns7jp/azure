@@ -6,7 +6,7 @@ Azure Well-Architected Frameworkの5柱を、この学習案件では次のよ�
 
 | 柱 | 採用内容 | 残る課題・トレードオフ |
 |---|---|---|
-| 信頼性 | IaCで再作成可能、起動診断 | 単一VMのため冗長性なし |
+| 信頼性 | IaCで再作成可能、起動診断、日次バックアップ | 単一VMのため冗長性なし |
 | セキュリティ | SSH鍵、CIDR制限、HTTP既定閉鎖 | Public IPを使用 |
 | コスト最適化 | 小さいSKU、短期利用、削除手順 | 正確な金額は事前見積が必要 |
 | 運用性 | タグ、Log Analytics、CPUアラート、Runbook | 通知先は環境ごとに追加が必要 |
@@ -21,12 +21,13 @@ Azure Well-Architected Frameworkの5柱を、この学習案件では次のよ�
 - cloud-initが初回起動時にNginxをインストールする。
 - Log Analytics WorkspaceへAzure Monitor Agent(AMA)経由でCPU/ディスク空き容量のパフォーマンスカウンターとsyslogを送信する。
 - Azure MonitorのメトリックアラートでCPU高負荷を検知し、Action Group経由でメール通知する。
+- Recovery Services VaultでVM全体を日次バックアップする。
 
 ## 3. 非機能設計
 
 ### 可用性
 
-学習版は単一VM。RTO(目標復旧時間)は4時間、RPO(許容データ損失)は24時間を仮置きするが、バックアップが対象外のため本番要件は満たさない。
+学習版は単一VM。Recovery Services Vault(`bkp-<suffix>`ポリシー)により毎日02:00(JST)にVM全体のバックアップを取得し30日間保持することで、RTO(目標復旧時間)4時間、RPO(許容データ損失)24時間という仮置き値をIaCとしては満たす設計にした。実際のバックアップジョブ完了・復元試験は利用者が実施するまで未検証である。採用理由と復元手順は[ADR-004](decisions/ADR-004-backup-policy.md)を参照。
 
 ### セキュリティ
 
@@ -47,10 +48,11 @@ CPUアラートはVMのプラットフォームメトリックを直接監視し
 | VM稼働 | Power state / Activity Log | 停止・割当解除 | 変更者と障害有無確認 |
 | Web | curl/ブラウザー | 応答不可 | NSG→VM→Nginxの順に切り分け |
 | OSログ(syslog) | Log AnalyticsのSyslogテーブルをKQLで検索 | Warning以上 | 該当ログの内容とタイミングを確認 |
+| バックアップジョブ | Recovery Services Vaultのバックアップジョブ一覧 | 失敗 | Azure Monitor通知内容とジョブログを確認 |
 
 ### コスト
 
-金額を固定値で書かない。VMサイズ、OSディスク、Public IP、Log Analytics取り込み・保持、データ転送をPricing Calculatorでデプロイ当日に見積もる。
+金額を固定値で書かない。VMサイズ、OSディスク、Public IP、Log Analytics取り込み・保持、バックアップストレージ(LRS)、データ転送をPricing Calculatorでデプロイ当日に見積もる。
 
 ## 4. 命名・タグ
 
@@ -62,4 +64,4 @@ CPUアラートはVMのプラットフォームメトリックを直接監視し
 
 ## 5. 将来構成
 
-本番要件が追加されたら、Public IP直結をやめ、Application Gateway/WAF、Private Endpoint/Bastion、Availability Zones、Backup、Defender for Cloud、Action Groupの通知先拡充(Teams/ITSM連携)を検討する。Public IP直結からBastion/VPNへ切り替える判断基準は[ADR-002](decisions/ADR-002-bastion-vs-public-ip.md)の「見直し条件」を参照。
+本番要件が追加されたら、Public IP直結をやめ、Application Gateway/WAF、Private Endpoint/Bastion、Availability Zones、Defender for Cloud、Action Groupの通知先拡充(Teams/ITSM連携)、バックアップのGRS化・週次/月次保持を検討する。Public IP直結からBastion/VPNへ切り替える判断基準は[ADR-002](decisions/ADR-002-bastion-vs-public-ip.md)の「見直し条件」を、バックアップ強化の判断基準は[ADR-004](decisions/ADR-004-backup-policy.md)の「見直し条件」を参照。

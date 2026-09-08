@@ -12,7 +12,7 @@
 | 顧客 | 従業員50名の架空企業 Sample Works |
 | 依頼 | 小規模な社内向け Linux Web サーバーを Azure に構築したい |
 | 成果物 | 要件定義、基本・詳細設計、Bicep、試験、運用、障害対応、証跡 |
-| 構成 | Resource Group / VNet / Subnet / NSG / Public IP / NIC / Linux VM / Log Analytics / CPU Alert / Action Group / AMA(Azure Monitor Agent) |
+| 構成 | Resource Group / VNet / Subnet / NSG / Public IP / NIC / Linux VM / Log Analytics / CPU Alert / Action Group / AMA(Azure Monitor Agent) / Recovery Services Vault |
 | セキュリティ | SSH鍵認証、接続元CIDR制限、最小許可、HTTPS化前はHTTPを既定で閉鎖 |
 | コスト配慮 | 小さいVM、手動削除手順、概算前提の明記、What-If優先 |
 | 検証状態 | 静的検証とCIを用意。実Azure環境での構築は利用者が実施するまで `NOT RUN` |
@@ -37,6 +37,7 @@ flowchart LR
     VM -->|AMA + DCR: Perf/Syslog| LAW[Log Analytics Workspace]
     VM --> Alert[CPU 使用率アラート]
     Alert --> AG[Action Group\nメール通知]
+    VM -->|日次バックアップ| RSV[Recovery Services Vault]
     VNet[VNet 10.20.0.0/16] --> Subnet[Subnet 10.20.1.0/24]
     Subnet --> NIC
 ```
@@ -47,6 +48,7 @@ flowchart LR
 - パスワード認証を無効化し、公開鍵だけを使います。
 - HTTPは `openHttp=false` が既定です。学習確認時だけ開け、本番想定では HTTPS、Application Gateway/WAF、Private Access 等を別途設計します。
 - CPUアラートはAzureプラットフォームメトリックを使い、Action Group経由でメール通知します。OSログ収集はAzure Monitor Agent(AMA)とData Collection Rule(DCR)で、CPU/ディスク空き容量のカウンターとsyslogをLog Analyticsへ送信します。採用理由と実機検証の進め方は[ADR-003](docs/decisions/ADR-003-action-group-and-os-log-collection.md)を参照してください。
+- Recovery Services Vaultで毎日VM全体をバックアップし30日間保持します。ストレージ冗長性は学習用途のコストを優先しLRSとしました。採用理由・復元手順は[ADR-004](docs/decisions/ADR-004-backup-policy.md)を参照してください。
 - 単一VMは学習費用を抑える判断です。高可用性要件があれば Availability Zones、Load Balancer、複数VMへ変更します。
 - リソース名とタグを統一し、誰の・何の・どの環境かを追跡します。
 
@@ -95,6 +97,9 @@ Copy-Item infra/parameters/dev.example.bicepparam infra/parameters/dev.biceppara
   -ResourceGroupName rg-portfolio-dev-jpe-001 `
   -ConfirmResourceGroupName rg-portfolio-dev-jpe-001
 ```
+
+> [!NOTE]
+> Recovery Services Vaultにバックアップされたリソースは、`remove.ps1`でリソースグループを削除する前に、Vault側のバックアップ保護・復元ポイントの削除が別途必要になる場合があります。詳細は[07. 運用・障害対応Runbook](docs/07-operations-runbook.md)を参照してください。
 
 ## リポジトリ構成
 

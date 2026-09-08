@@ -346,6 +346,7 @@ resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 }
 
 output vmName string = vm.name
+output vmId string = vm.id
 output workspaceName string = workspace.name
 output publicIpAddress string = publicIp.properties.ipAddress
 output actionGroupName string = actionGroup.name

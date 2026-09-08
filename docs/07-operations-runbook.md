@@ -12,6 +12,7 @@
 - Cost Managementで予算差異と不要リソースを確認。
 - Defender for Cloud / Advisorの推奨事項を評価。
 - OS更新、容量、ログ量、アカウント・RBACを確認。
+- Recovery Services Vaultのバックアップジョブ履歴を確認し、失敗が続いていないか確認。
 - 復旧手順を机上または隔離環境で訓練。
 
 ## インシデント初動：止・見・守・戻・残
@@ -66,6 +67,43 @@ journalctl --since "30 minutes ago" --no-pager | tail -200
 ```
 
 プロセスを即時終了する前に、業務影響と原因調査に必要な情報を保存する。再起動は復旧になっても原因除去にならない。
+
+## バックアップ・復元
+
+Recovery Services Vault(`rsv-<suffix>`)が毎日02:00(JST)にVM全体をバックアップし、30日間保持する。設計判断は[ADR-004](decisions/ADR-004-backup-policy.md)を参照。
+
+### バックアップ状況の確認
+
+```powershell
+az backup job list --resource-group rg-portfolio-dev-jpe-001 --vault-name rsv-portfolio-dev-jpe-001 --output table
+az backup item list --resource-group rg-portfolio-dev-jpe-001 --vault-name rsv-portfolio-dev-jpe-001 --output table
+```
+
+### 復元(隔離環境への別名復元)
+
+本番相当のVMを直接上書きせず、必ず別名(例: `vm-restore-test`)の新規VMへ復元してから内容を確認する。
+
+1. 復元ポイントを確認する。
+
+   ```powershell
+   az backup recoverypoint list `
+     --resource-group rg-portfolio-dev-jpe-001 `
+     --vault-name rsv-portfolio-dev-jpe-001 `
+     --container-name vm-portfolio-dev-jpe-001 `
+     --item-name vm-portfolio-dev-jpe-001 `
+     --output table
+   ```
+
+2. 選んだ復元ポイントから、別名の新規VMとして復元する(`--restore-to-staging-storage-account`または`az backup restore restore-disks`を用いる。詳細はAzure Backupの公式手順を参照)。
+3. 復元されたVMにSSH接続し、`OS-01`/`OS-02`相当の確認(Nginx稼働、80/tcp Listen)を行う。
+4. 確認後、復元用に作成したリソース(VM、ディスク、NIC等)をすべて削除し、二重課金を避ける。
+5. 実施結果を試験ID `BK-01`(バックアップジョブ確認)・`BK-02`(復元試験)として、日時・実施者・合否とともに証跡に残す。
+
+### よくある失敗
+
+- 初回バックアップが完了する前に復元を試みる: バックアップジョブが`Completed`になるまで数時間待つ。
+- 復元VMを元のVM名やNSG/Public IPと衝突する名前で作成してしまう: 必ず一意な別名を使う。
+- 復元検証後にリソースを削除し忘れる: バックアップ由来のディスク・VMは通常のリソースと同様に課金され続ける。
 
 ## 変更手順
 
