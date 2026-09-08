@@ -21,9 +21,16 @@ jobs:
             status=0
             for file in infra/main.bicep infra/advanced/main.bicep; do
               echo "Building $file"
-              output=$(az bicep build --file "$file" --stdout 2>&1 1>/dev/null) || status=1
-              if [ -n "$output" ]; then
+              if ! output=$(az bicep build --file "$file" --stdout 2>&1 1>/dev/null); then
                 echo "$output"
+                status=1
+                continue
+              fi
+              # az CLI自体の設定通知(bicep.use_binary_from_path等)はビルドのたびに出るため対象外とし、
+              # 実際のBicep診断("<file>(line,col) : Warning BCPxxx: ...")のみを警告として扱う。
+              lintWarnings=$(printf '%s\n' "$output" | grep -E ': Warning BCP[0-9]+:' || true)
+              if [ -n "$lintWarnings" ]; then
+                echo "$lintWarnings"
                 status=1
               fi
             done
