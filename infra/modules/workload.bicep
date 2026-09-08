@@ -7,6 +7,8 @@ param adminCidr string
 param openHttp bool
 param vmSize string
 param adminUsername string
+@description('CPUアラート・OSログ関連アラートの通知先メールアドレス')
+param alertEmailAddress string
 
 var vnetName = 'vnet-${suffix}'
 var subnetName = 'snet-server-${suffix}'
@@ -16,6 +18,8 @@ var nicName = 'nic-${suffix}'
 var vmName = 'vm-${suffix}'
 var lawName = 'log-${suffix}'
 var alertName = 'alert-cpu-${suffix}'
+var actionGroupName = 'ag-${suffix}'
+var dcrName = 'dcr-${suffix}'
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: nsgName
@@ -185,6 +189,126 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------
+// OSログ収集(Azure Monitor Agent + Data Collection Rule)
+// VM内のCPU/ディスク空き容量のパフォーマンスカウンターと、認証・エラー系のsyslogを
+// Log Analyticsへ送信する。09-gap-analysis-and-roadmap.mdで「高」とされていた
+// 「監視通知とOSログ収集」の未構成状態を解消する。
+// -----------------------------------------------------------------------------
+resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+  name: dcrName
+  location: location
+  tags: commonTags
+  properties: {
+    dataSources: {
+      performanceCounters: [
+        {
+          name: 'perfCounterDataSource'
+          streams: [
+            'Microsoft-Perf'
+          ]
+          samplingFrequencyInSeconds: 60
+          counterSpecifiers: [
+            '\\Processor(_Total)\\% Processor Time'
+            '\\LogicalDisk(_Total)\\% Free Space'
+          ]
+        }
+      ]
+      syslog: [
+        {
+          name: 'sysLogsDataSource'
+          streams: [
+            'Microsoft-Syslog'
+          ]
+          facilityNames: [
+            'auth'
+            'authpriv'
+            'daemon'
+            'syslog'
+          ]
+          logLevels: [
+            'Warning'
+            'Error'
+            'Critical'
+            'Alert'
+            'Emergency'
+          ]
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: workspace.id
+          name: 'laDestination'
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Microsoft-Perf'
+        ]
+        destinations: [
+          'laDestination'
+        ]
+      }
+      {
+        streams: [
+          'Microsoft-Syslog'
+        ]
+        destinations: [
+          'laDestination'
+        ]
+      }
+    ]
+  }
+}
+
+resource amaExtension 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' = {
+  name: 'AzureMonitorLinuxAgent'
+  parent: vm
+  location: location
+  tags: commonTags
+  properties: {
+    publisher: 'Microsoft.Azure.Monitor'
+    type: 'AzureMonitorLinuxAgent'
+    typeHandlerVersion: '1.33'
+    autoUpgradeMinorVersion: true
+  }
+}
+
+resource dcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11' = {
+  name: 'dcra-${suffix}'
+  scope: vm
+  properties: {
+    dataCollectionRuleId: dcr.id
+  }
+  dependsOn: [
+    amaExtension
+  ]
+}
+
+// -----------------------------------------------------------------------------
+// Action Group: CPUアラートの通知先(メール)
+// -----------------------------------------------------------------------------
+resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+  name: actionGroupName
+  location: 'global'
+  tags: commonTags
+  properties: {
+    groupShortName: take(replace(suffix, '-', ''), 12)
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'ops-email'
+        emailAddress: alertEmailAddress
+        useCommonAlertSchema: true
+      }
+    ]
+  }
+}
+
 resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: alertName
   location: 'global'
@@ -213,10 +337,15 @@ resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       ]
     }
     autoMitigate: true
-    actions: []
+    actions: [
+      {
+        actionGroupId: actionGroup.id
+      }
+    ]
   }
 }
 
 output vmName string = vm.name
 output workspaceName string = workspace.name
 output publicIpAddress string = publicIp.properties.ipAddress
+output actionGroupName string = actionGroup.name
